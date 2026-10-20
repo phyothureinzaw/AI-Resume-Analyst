@@ -22,7 +22,7 @@ export function authController(pool: Pick<Pool, 'query'>) {
     csrf: ((_req, res) => { const token = randomBytes(32).toString('base64url'); noStore(res); res.setHeader('Set-Cookie', csrfCookie(token)); res.status(200).json({ csrfToken: token }); }) as RequestHandler,
     register: (async (req, res, next) => { try { const user = await registerUser(repo, registerSchema.parse(req.body)); noStore(res); res.status(201).json({ user }); } catch (error) { next(validationError(error)); } }) as RequestHandler,
     login: (async (req, res, next) => { try { const result = await loginUser(repo, loginSchema.parse(req.body)); const maxAge = Math.max(0, Math.floor((result.expiresAt.getTime() - Date.now()) / 1000)); noStore(res); res.setHeader('Set-Cookie', sessionCookie(result.rawToken, maxAge)); res.status(200).json({ user: result.user }); } catch (error) { next(validationError(error)); } }) as RequestHandler,
-    logout: (async (req, res, next) => { try { const rawToken = readSessionToken(req); if (rawToken) await repo.revokeSession(hashSessionToken(rawToken)); noStore(res); res.setHeader('Set-Cookie', clearSessionCookie()); res.status(204).send(); } catch (error) { next(error); } }) as RequestHandler,
+    logout: (async (req, res, next) => { try { const rawToken = readSessionToken(req); if (rawToken) await repo.revokeSession(hashSessionToken(rawToken)); noStore(res); res.setHeader('Set-Cookie', clearSessionCookie()); res.status(204).send(); } catch (error) { next(validationError(error)); } }) as RequestHandler,
     me: ((req, res) => { noStore(res); res.status(200).json({ user: toSafeUser(res.locals.authUser) }); }) as RequestHandler,
     csrfProtection
   };

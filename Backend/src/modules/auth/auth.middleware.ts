@@ -31,7 +31,7 @@ export function authenticate(pool: Pick<Pool, 'query'>): RequestHandler {
       res.locals.authUser = user;
       next();
     } catch (error) {
-      next(error);
+      next(error instanceof AppError ? error : new AppError(500, 'Internal server error', 'INTERNAL_ERROR'));
     }
   };
 }

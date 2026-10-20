@@ -1,0 +1,3 @@
+import { useNavigate } from 'react-router-dom';
+import { ResumeEditor } from '../components/ResumeEditor';
+export function ResumeNewPage() { const navigate = useNavigate(); return <main className="mx-auto max-w-4xl px-6 py-10"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">New resume</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Add resume</h1><p className="mt-3 text-slate-600">Review the text carefully before saving it.</p><div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"><ResumeEditor onSaved={(id) => navigate(`/resumes/${id}`)} /></div></main>; }
