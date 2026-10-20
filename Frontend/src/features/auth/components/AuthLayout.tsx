@@ -1,0 +1,2 @@
+import { Link, Outlet } from 'react-router-dom';
+export function AuthLayout() { return <main className="flex min-h-[calc(100vh-80px)] items-center justify-center px-6 py-12"><div className="w-full max-w-md"><Link to="/" className="text-sm font-bold tracking-tight text-slate-950">Resume Match</Link><div className="mt-8 rounded-2xl border border-slate-200 bg-white p-7 shadow-lg shadow-slate-200/50 sm:p-9"><Outlet /></div></div></main>; }

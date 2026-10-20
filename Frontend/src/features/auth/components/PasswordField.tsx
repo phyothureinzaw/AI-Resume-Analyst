@@ -1,0 +1,3 @@
+import { useState } from 'react';
+import { FormField } from './FormField';
+export function PasswordField(props: Omit<Parameters<typeof FormField>[0], 'type' | 'children'>) { const [visible, setVisible] = useState(false); return <FormField {...props} type={visible ? 'text' : 'password'}><button type="button" onClick={() => setVisible((current) => !current)} aria-label={visible ? 'Hide password' : 'Show password'} className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">{visible ? 'Hide' : 'Show'}</button></FormField>; }

@@ -1,0 +1,2 @@
+import { useCurrentUser } from '../../auth/hooks/use-auth';
+export function DashboardPage() { const user = useCurrentUser().data?.user; return <main className="mx-auto max-w-5xl px-6 py-12"><p className="text-sm font-semibold uppercase tracking-[0.2em] text-blue-600">Dashboard</p><h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">Welcome, {user?.fullName}.</h1><p className="mt-3 max-w-xl text-slate-600">Your workspace is ready. Resume and job matching tools will appear here in a later checkpoint.</p></main>; }

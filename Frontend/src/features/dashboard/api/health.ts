@@ -1,0 +1,1 @@
+import { getJson } from '../../../shared/api/client'; export type ReadinessResponse = { status: 'ready'; database: 'available' }; export function getReadiness(): Promise<ReadinessResponse> { return getJson<ReadinessResponse>('/health/ready'); }

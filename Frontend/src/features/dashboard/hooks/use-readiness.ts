@@ -1,0 +1,1 @@
+import { useQuery } from '@tanstack/react-query'; import { getReadiness } from '../api/health'; export function useReadiness() { return useQuery({ queryKey: ['health', 'readiness'], queryFn: getReadiness, retry: 1, staleTime: 15_000 }); }
