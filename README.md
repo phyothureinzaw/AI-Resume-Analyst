@@ -1,16 +1,16 @@
 # AI Resume Analyzer & Job Matching Platform
 
-Checkpoint 3 adds owned resume CRUD, search/pagination, paste-and-review creation, bounded PDF text extraction, and protected resume frontend routes. Job CRUD and AI analysis remain out of scope.
+Checkpoint 4 adds owned job-description CRUD, search/pagination, and protected job frontend routes. Resume management and bounded PDF extraction remain available; AI analysis remains out of scope.
 
 ## Architecture
 
 - `Backend`: strict TypeScript Express API with a single `pg` pool, request IDs, structured logging, centralized errors, health endpoints, Argon2id password hashing, and PostgreSQL-backed opaque sessions.
 - `Frontend`: Vite React TypeScript app with React Router, TanStack Query, Tailwind CSS, a typed credentialed API client, and protected routes.
-- `Database`: the existing PostgreSQL schema remains authoritative. The existing `resumes` and `resume_analyses` tables were inspected read-only; no schema-changing SQL is needed for this checkpoint.
+- `Database`: the existing PostgreSQL schema remains authoritative. The existing `job_descriptions`, `resumes`, and `resume_analyses` tables were inspected read-only; no schema-changing SQL is needed for this checkpoint.
 
 ## Database workflow
 
-The current database remains authoritative. Checkpoint 2 adds the versioned `Backend/migrations/001_add_auth_sessions.sql` migration; it does not recreate or alter the existing tables. Apply it once before using authentication. Checkpoint 3 does not add a migration. See `Backend/migrations/README.md` for the Windows workflow and expired-session cleanup.
+The current database remains authoritative. Checkpoint 2 adds the versioned `Backend/migrations/001_add_auth_sessions.sql` migration; it does not recreate or alter the existing tables. Apply it once before using authentication. Checkpoints 3 and 4 do not add migrations. See `Backend/migrations/README.md` for the Windows workflow and expired-session cleanup.
 
 Sessions expire after `SESSION_TTL_DAYS` (default 7). The session cookie is HttpOnly, Path=/, SameSite=Lax, and Secure only in production. The CSRF token is a separate readable cookie plus request header; state-changing auth requests also validate the configured Origin. Local development supports the frontend at `http://localhost:5173` and backend at `http://localhost:4000` with credentialed CORS. The rate limiter uses an in-memory single-instance store and should be replaced with a shared store before multi-instance deployment.
 
@@ -73,3 +73,11 @@ The backend defaults to `http://localhost:4000`; the frontend defaults to `http:
 - `DELETE /api/resumes/:id` deletes the owned resume and any dependent analysis rows through the existing database cascade.
 
 PDF extraction is intentionally text-only: encrypted, corrupt, image-only/scanned, unsupported, oversized, and overlong-output files return clear errors. Extraction runs in a bounded worker and does not log uploaded text.
+
+## Job endpoints
+
+- `GET /api/jobs?page=1&pageSize=10&search=` lists only the signed-in user’s job summaries.
+- `POST /api/jobs` creates a job from `jobTitle`, optional `companyName`, and `descriptionText` JSON.
+- `GET /api/jobs/:id` returns one owned job with its description.
+- `PATCH /api/jobs/:id` edits the allowed job fields, including clearing the company with `null`.
+- `DELETE /api/jobs/:id` deletes the owned job and linked analyses through the existing database cascade.

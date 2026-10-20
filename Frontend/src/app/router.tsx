@@ -11,6 +11,10 @@ import { ResumeListPage } from '../features/resumes/pages/ResumeListPage';
 import { ResumeNewPage } from '../features/resumes/pages/ResumeNewPage';
 import { ResumeDetailPage } from '../features/resumes/pages/ResumeDetailPage';
 import { ResumeEditPage } from '../features/resumes/pages/ResumeEditPage';
+import { JobListPage } from '../features/jobs/pages/JobListPage';
+import { JobNewPage } from '../features/jobs/pages/JobNewPage';
+import { JobDetailPage } from '../features/jobs/pages/JobDetailPage';
+import { JobEditPage } from '../features/jobs/pages/JobEditPage';
 import { NotFoundPage } from './NotFoundPage';
 
 export const router = createBrowserRouter([
@@ -41,6 +45,10 @@ export const router = createBrowserRouter([
               { path: '/resumes/new', element: <ResumeNewPage /> },
               { path: '/resumes/:id', element: <ResumeDetailPage /> },
               { path: '/resumes/:id/edit', element: <ResumeEditPage /> },
+              { path: '/jobs', element: <JobListPage /> },
+              { path: '/jobs/new', element: <JobNewPage /> },
+              { path: '/jobs/:id', element: <JobDetailPage /> },
+              { path: '/jobs/:id/edit', element: <JobEditPage /> },
             ],
           },
         ],
