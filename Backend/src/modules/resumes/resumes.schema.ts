@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { MAX_DOCUMENT_TEXT_LENGTH } from '../../shared/content-limits.js';
 
-const resumeText = z.string().max(100_000, 'Resume text must be 100,000 characters or fewer.').refine((value) => value.trim().length > 0, 'Resume text cannot be blank.');
+const resumeText = z.string().max(MAX_DOCUMENT_TEXT_LENGTH, `Resume text must be ${MAX_DOCUMENT_TEXT_LENGTH.toLocaleString()} characters or fewer.`).refine((value) => value.trim().length > 0, 'Resume text cannot be blank.');
 
 export const createResumeSchema = z.object({ title: z.string().trim().min(1, 'Title cannot be blank.').max(150, 'Title must be 150 characters or fewer.'), resumeText }).strict();
 export const patchResumeSchema = z.object({ title: z.string().trim().min(1, 'Title cannot be blank.').max(150, 'Title must be 150 characters or fewer.').optional(), resumeText: resumeText.optional() }).strict().refine((value) => value.title !== undefined || value.resumeText !== undefined, 'Provide title or resumeText to update.');

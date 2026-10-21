@@ -1,9 +1,10 @@
 import Busboy from 'busboy';
 import type { Request } from 'express';
 import { AppError } from '../../../shared/errors/app-error.js';
+import { MAX_PDF_FILE_BYTES } from '../../../shared/content-limits.js';
 import { extractPdfText } from './pdf-worker.js';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+const MAX_FILE_SIZE = MAX_PDF_FILE_BYTES;
 let activeExtractions = 0;
 
 export async function extractUploadedPdf(req: Request): Promise<string> {

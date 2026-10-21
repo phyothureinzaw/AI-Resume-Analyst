@@ -16,7 +16,6 @@ const envSchema = z.object({
   ANALYSIS_WORKER_LEASE_MS: z.coerce.number().int().min(30_000).max(300_000).default(90_000),
   ANALYSIS_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(5).default(3),
   ANALYSIS_MAX_ACTIVE_PER_USER: z.coerce.number().int().min(1).max(5).default(2),
-  ANALYSIS_MAX_TEXT_LENGTH: z.coerce.number().int().min(1_000).max(200_000).default(100_000)
 });
 
 export const env = (() => {

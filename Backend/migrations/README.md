@@ -19,3 +19,31 @@ Expired-session cleanup remains a separate manual operation:
 ```sql
 DELETE FROM auth_sessions WHERE expires_at <= now();
 ```
+
+## Read-only verification queries
+
+These queries inspect ownership, dashboard-safe counts, and analysis status without selecting resume/job document contents or session tokens:
+
+```sql
+SELECT
+  (SELECT COUNT(*) FROM resumes) AS resumes,
+  (SELECT COUNT(*) FROM job_descriptions) AS jobs,
+  (SELECT COUNT(*) FROM resume_analyses) AS analyses;
+```
+
+```sql
+SELECT status, COUNT(*) AS total
+FROM resume_analyses
+GROUP BY status
+ORDER BY status;
+```
+
+```sql
+SELECT id, user_id, resume_id, job_description_id, status,
+       match_score, created_at, completed_at
+FROM resume_analyses
+ORDER BY created_at DESC, id DESC
+LIMIT 5;
+```
+
+Do not use `SELECT *` for verification because the analysis table contains stored text snapshots.

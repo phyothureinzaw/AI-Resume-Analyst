@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process';
 import { AppError } from '../../../shared/errors/app-error.js';
+import { MAX_PDF_EXTRACTED_TEXT_LENGTH } from '../../../shared/content-limits.js';
 
-const MAX_TEXT_LENGTH = 100_000;
+const MAX_TEXT_LENGTH = MAX_PDF_EXTRACTED_TEXT_LENGTH;
 const PARSE_TIMEOUT_MS = 10_000;
 const CHILD_MEMORY_MB = 64;
 const CHILD_STACK_KB = 4096;

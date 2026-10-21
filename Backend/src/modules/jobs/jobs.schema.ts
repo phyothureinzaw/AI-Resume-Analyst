@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { MAX_DOCUMENT_TEXT_LENGTH } from '../../shared/content-limits.js';
 
 const companyName = z.preprocess((value) => typeof value === 'string' && value.trim() === '' ? null : value, z.string().trim().max(150).nullable().optional().default(null));
-const descriptionText = z.string().max(100_000).refine((value) => value.trim().length > 0, 'Job description cannot be blank.');
+const descriptionText = z.string().max(MAX_DOCUMENT_TEXT_LENGTH).refine((value) => value.trim().length > 0, 'Job description cannot be blank.');
 
 export const createJobSchema = z.object({
   jobTitle: z.string().trim().min(1, 'Job title cannot be blank.').max(150),
