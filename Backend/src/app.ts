@@ -9,6 +9,7 @@ import { authRoutes } from './modules/auth/auth.routes.js';
 import type { Pool } from 'pg';
 import { resumeRoutes } from './modules/resumes/resumes.routes.js';
 import { jobsRoutes } from './modules/jobs/jobs.routes.js';
+import { analysesRoutes } from './modules/analyses/analysis.routes.js';
 
 export function createApp(databasePool: Pick<Pool, 'query'>) {
   const app = express();
@@ -21,6 +22,7 @@ export function createApp(databasePool: Pick<Pool, 'query'>) {
   app.use('/api/auth', authRoutes(databasePool));
   app.use('/api/resumes', resumeRoutes(databasePool as Pool));
   app.use('/api/jobs', jobsRoutes(databasePool as Pool));
+  app.use('/api/analyses', analysesRoutes(databasePool as Pool));
   app.use(notFound);
   app.use(errorHandler);
   return app;

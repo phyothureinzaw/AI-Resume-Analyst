@@ -8,7 +8,15 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().url().default('http://localhost:5173'),
   BODY_LIMIT: z.string().default('1mb'),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(30).default(7),
-  TRUST_PROXY: z.enum(['true', 'false']).default('false')
+  TRUST_PROXY: z.enum(['true', 'false']).default('false'),
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  GEMINI_MODEL: z.string().min(1).default('gemini-3.5-flash-lite'),
+  GEMINI_TIMEOUT_MS: z.coerce.number().int().min(5_000).max(120_000).default(60_000),
+  ANALYSIS_WORKER_POLL_MS: z.coerce.number().int().min(250).max(30_000).default(2_000),
+  ANALYSIS_WORKER_LEASE_MS: z.coerce.number().int().min(30_000).max(300_000).default(90_000),
+  ANALYSIS_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(5).default(3),
+  ANALYSIS_MAX_ACTIVE_PER_USER: z.coerce.number().int().min(1).max(5).default(2),
+  ANALYSIS_MAX_TEXT_LENGTH: z.coerce.number().int().min(1_000).max(200_000).default(100_000)
 });
 
 export const env = (() => {

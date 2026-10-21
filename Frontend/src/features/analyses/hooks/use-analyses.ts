@@ -1,0 +1,5 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { analysisKeys, createAnalysis, getAnalysis, listAnalyses } from '../api/analyses';
+export function useAnalysisList(page: number, pageSize: number, status?: string) { return useQuery({ queryKey: analysisKeys.list(page, pageSize, status), queryFn: ({ signal }) => listAnalyses(page, pageSize, status, signal), placeholderData: (previous) => previous }); }
+export function useAnalysis(id: string) { return useQuery({ queryKey: analysisKeys.detail(id), queryFn: ({ signal }) => getAnalysis(id, signal), enabled: Boolean(id), retry: false, refetchInterval: (query) => { const status = query.state.data?.analysis.status; return status === 'pending' || status === 'processing' ? 2_000 : false; } }); }
+export function useAnalysisCreation() { const client = useQueryClient(); return useMutation({ mutationFn: createAnalysis, retry: false, onSuccess: (data) => { void client.invalidateQueries({ queryKey: analysisKeys.all }); void client.invalidateQueries({ queryKey: analysisKeys.detail(data.analysisId) }); } }); }

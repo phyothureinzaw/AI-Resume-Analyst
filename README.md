@@ -1,16 +1,16 @@
 # AI Resume Analyzer & Job Matching Platform
 
-Checkpoint 4 adds owned job-description CRUD, search/pagination, and protected job frontend routes. Resume management and bounded PDF extraction remain available; AI analysis remains out of scope.
+Checkpoint 5 adds a PostgreSQL-backed Gemini analysis queue, deterministic requirement coverage scoring, evidence validation, a separate worker, and protected analysis frontend routes. Resume management, bounded PDF extraction, and job-description management remain available.
 
 ## Architecture
 
 - `Backend`: strict TypeScript Express API with a single `pg` pool, request IDs, structured logging, centralized errors, health endpoints, Argon2id password hashing, and PostgreSQL-backed opaque sessions.
 - `Frontend`: Vite React TypeScript app with React Router, TanStack Query, Tailwind CSS, a typed credentialed API client, and protected routes.
-- `Database`: the existing PostgreSQL schema remains authoritative. The existing `job_descriptions`, `resumes`, and `resume_analyses` tables were inspected read-only; no schema-changing SQL is needed for this checkpoint.
+- `Database`: the existing PostgreSQL schema remains authoritative. The existing `job_descriptions`, `resumes`, and `resume_analyses` tables were inspected read-only. Checkpoint 5 adds the forward-only `Backend/migrations/002_add_analysis_queue.sql` queue migration.
 
 ## Database workflow
 
-The current database remains authoritative. Checkpoint 2 adds the versioned `Backend/migrations/001_add_auth_sessions.sql` migration; it does not recreate or alter the existing tables. Apply it once before using authentication. Checkpoints 3 and 4 do not add migrations. See `Backend/migrations/README.md` for the Windows workflow and expired-session cleanup.
+The current database remains authoritative. Apply `001_add_auth_sessions.sql` and then `002_add_analysis_queue.sql` once before using authentication and analysis. Neither migration resets or recreates existing tables. See `Backend/migrations/README.md` for the Windows workflow.
 
 Sessions expire after `SESSION_TTL_DAYS` (default 7). The session cookie is HttpOnly, Path=/, SameSite=Lax, and Secure only in production. The CSRF token is a separate readable cookie plus request header; state-changing auth requests also validate the configured Origin. Local development supports the frontend at `http://localhost:5173` and backend at `http://localhost:4000` with credentialed CORS. The rate limiter uses an in-memory single-instance store and should be replaced with a shared store before multi-instance deployment.
 

@@ -16,6 +16,9 @@ import { JobNewPage } from '../features/jobs/pages/JobNewPage';
 import { JobDetailPage } from '../features/jobs/pages/JobDetailPage';
 import { JobEditPage } from '../features/jobs/pages/JobEditPage';
 import { NotFoundPage } from './NotFoundPage';
+import { AnalysisListPage } from '../features/analyses/pages/AnalysisListPage';
+import { AnalysisNewPage } from '../features/analyses/pages/AnalysisNewPage';
+import { AnalysisDetailPage } from '../features/analyses/pages/AnalysisDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -49,6 +52,9 @@ export const router = createBrowserRouter([
               { path: '/jobs/new', element: <JobNewPage /> },
               { path: '/jobs/:id', element: <JobDetailPage /> },
               { path: '/jobs/:id/edit', element: <JobEditPage /> },
+              { path: '/analyses', element: <AnalysisListPage /> },
+              { path: '/analyses/new', element: <AnalysisNewPage /> },
+              { path: '/analyses/:id', element: <AnalysisDetailPage /> },
             ],
           },
         ],

@@ -1,20 +1,21 @@
-# Authentication migration
+# Migrations
 
-Checkpoint 2 adds `001_add_auth_sessions.sql`. Apply it once to the existing development database after reviewing it. It only creates the new session table and indexes; it does not recreate or alter existing tables.
+The current PostgreSQL database remains authoritative. Do not reset, truncate, or recreate it.
 
 From Windows CMD, with PostgreSQL's `psql` available:
 
 ```cmd
 cd /d "C:\Users\User\Desktop\MINE\PERSONAL PROJECT\Resume Analyst\Backend"
 psql -h localhost -p 5432 -U resume_match_app -d resume_match_db -f migrations\001_add_auth_sessions.sql
+psql -h localhost -p 5432 -U resume_match_app -d resume_match_db -f migrations\002_add_analysis_queue.sql
 ```
 
-If `DATABASE_URL` is only stored in `.env`, use pgAdmin's Query Tool to run the migration file instead. Never paste the connection password into source control.
+Run each migration once, in filename order. If `DATABASE_URL` is only stored in `.env`, use pgAdmin's Query Tool instead. Never paste the connection password into source control.
 
-Expired-session cleanup is safe and read-only verification is separate. When cleanup is needed, run:
+`002_add_analysis_queue.sql` is forward-only and preserves existing rows. A legacy `processing` row is safely requeued as `pending` because it cannot have a valid claim token from the old schema.
+
+Expired-session cleanup remains a separate manual operation:
 
 ```sql
 DELETE FROM auth_sessions WHERE expires_at <= now();
 ```
-
-This cleanup is intentionally manual in Checkpoint 2 and should be scheduled by the deployment environment later.
