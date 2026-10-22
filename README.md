@@ -43,6 +43,29 @@ cd /d "C:\Users\User\Desktop\MINE\PERSONAL PROJECT\Resume Analyst\Backend"
 npm run worker
 ```
 
+Run the interview-preparation worker in a fourth CMD window when testing IP-2:
+
+```cmd
+cd /d "C:\Users\User\Desktop\MINE\PERSONAL PROJECT\Resume Analyst\Backend"
+npm run interview-worker
+```
+
+For local development, the backend API and both queue workers can be started
+together from one Windows CMD window:
+
+```cmd
+cd /d "C:\Users\User\Desktop\MINE\PERSONAL PROJECT\Resume Analyst\Backend"
+npm run dev:all
+```
+
+The combined command runs the existing `dev`, `worker`, and
+`interview-worker` scripts. Logs are prefixed with `[API]`, `[ANALYSIS]`, or
+`[INTERVIEW]`. Press `Ctrl+C` once to stop all three child processes. If any
+child exits unexpectedly, the other processes are stopped and the combined
+command reports the child-process result. Each child inherits the Backend environment
+and loads the same local `.env` configuration as when its individual script is
+run. This command is for local development only.
+
 Production checks:
 
 ```cmd
@@ -114,6 +137,26 @@ The original PDF is discarded after extraction; only the explicitly reviewed tex
 ## Analysis worker behavior
 
 `POST /api/analyses` creates a pending row and returns `202`. Start `npm run worker` separately. The worker leases rows, retries transient/rate-limit failures up to `ANALYSIS_MAX_ATTEMPTS`, and marks non-retryable provider or validation failures as `failed`. A process crash can result in a repeat provider call after the lease expires; request IDs prevent duplicate enqueueing for a replayed creation request. Failed analyses remain historical records and are not silently requeued.
+
+## Interview preparation worker (IP-2)
+
+`POST /api/interview-preparations` remains the IP-1 enqueue endpoint and returns `202` with `pending`. Run `npm run interview-worker` separately; it only claims `interview_preparations` rows and does not touch `resume_analyses`. It uses the stored job/resume snapshots, generates exactly five technical, four scenario, and three behavioral practice questions, validates source-segment citations server-side, and stores only validated results. Job-only answers are general; resume-grounded answers require cited resume segments; unsupported behavioral answers use explicit STAR placeholders. No score or hiring prediction is generated. The result schema is versioned as `interview-preparation-result-v1` and the prompt as `interview-preparation-prompt-v1`.
+
+New preparations are rejected at creation with `INTERVIEW_JOB_CONTENT_INSUFFICIENT` when the saved job description is only a title/fragment and contains no identifiable responsibilities, skills, qualifications, or similar role requirements. This prevents an accepted queue row from failing later at the worker boundary. Existing failed rows are historical and are not automatically requeued.
+
+The worker uses the configured `GEMINI_MODEL` and the installed `@google/genai` SDK. The provider schema intentionally uses the supported structural JSON-schema subset; server-side Zod limits the exact question count, string sizes, citation counts, and category counts. Provider refusal, truncation, malformed JSON, invalid citations, insufficient job content, and non-retryable request errors become safe terminal failures with `completed_at`. Transient and rate-limit errors are retried only within `ANALYSIS_MAX_ATTEMPTS`. A crash after a provider call may cause a repeat call after lease expiry; completion updates are claim-token fenced.
+
+IP-2 generated and stored interview results; the frontend interview section is implemented separately in IP-3 below.
+
+## Interview preparation frontend (IP-3)
+
+The protected frontend routes are:
+
+- `/interview-preparations` — paginated history with status filters.
+- `/interview-preparations/new` — searchable job selector, optional searchable resume selector, and explicit generation action.
+- `/interview-preparations/:id` — pending/processing status, terminal failures, or the completed 12-question report.
+
+The detail page polls only while a preparation is pending or processing. It stops polling on completion or failure, keeps failed records visible, and offers a new explicit preparation without silently requeueing. Answers are rendered as plain text with keyboard-accessible disclosure buttons. Source segment IDs are not exposed as raw citations because IP-2 does not return snapshot excerpts; the UI shows only truthful reference availability. The interview frontend does not add scores, exports, chat, voice, or progress percentages.
 
 ## Troubleshooting
 

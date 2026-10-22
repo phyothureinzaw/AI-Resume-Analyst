@@ -19,6 +19,9 @@ import { NotFoundPage } from './NotFoundPage';
 import { AnalysisListPage } from '../features/analyses/pages/AnalysisListPage';
 import { AnalysisNewPage } from '../features/analyses/pages/AnalysisNewPage';
 import { AnalysisDetailPage } from '../features/analyses/pages/AnalysisDetailPage';
+import { InterviewPreparationListPage } from '../features/interview-preparations/pages/InterviewPreparationListPage';
+import { InterviewPreparationNewPage } from '../features/interview-preparations/pages/InterviewPreparationNewPage';
+import { InterviewPreparationDetailPage } from '../features/interview-preparations/pages/InterviewPreparationDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -55,6 +58,9 @@ export const router = createBrowserRouter([
               { path: '/analyses', element: <AnalysisListPage /> },
               { path: '/analyses/new', element: <AnalysisNewPage /> },
               { path: '/analyses/:id', element: <AnalysisDetailPage /> },
+              { path: '/interview-preparations', element: <InterviewPreparationListPage /> },
+              { path: '/interview-preparations/new', element: <InterviewPreparationNewPage /> },
+              { path: '/interview-preparations/:id', element: <InterviewPreparationDetailPage /> },
             ],
           },
         ],

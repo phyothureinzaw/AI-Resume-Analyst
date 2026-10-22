@@ -7,6 +7,7 @@ const navigation = [
   { to: '/resumes', label: 'Resumes', icon: '▤' },
   { to: '/jobs', label: 'Jobs', icon: '▣' },
   { to: '/analyses', label: 'Analyses', icon: '◌' }
+  ,{ to: '/interview-preparations', label: 'Interview Prep', icon: '✦' }
 ];
 
 export function AuthenticatedShell() {
