@@ -9,14 +9,21 @@ import type { Pool } from 'pg';
 const transientKinds = new Set(['transient', 'rate_limited']);
 function retryDelay(attempt: number): number { return Math.min(30_000, 1_000 * (2 ** Math.max(0, attempt - 1)) + Math.floor(Math.random() * 500)); }
 type FailureStage = 'queue_claim' | 'input_validation' | 'gemini_request' | 'json_parse' | 'schema_validation' | 'evidence_validation' | 'scoring' | 'database_completion' | 'failure_persistence' | 'worker_loop';
-function safeErrorCode(error: unknown): string { if (error instanceof GeminiProviderError) return `GEMINI_${error.kind.toUpperCase()}`; if (error instanceof AnalysisProcessingError) return error.code; return 'ANALYSIS_FAILED'; }
+const unexpectedStageCodes: Record<FailureStage, string> = { queue_claim: 'ANALYSIS_QUEUE_FAILED', input_validation: 'ANALYSIS_INPUT_FAILED', gemini_request: 'ANALYSIS_PROVIDER_FAILED', json_parse: 'ANALYSIS_JSON_PARSE_FAILED', schema_validation: 'ANALYSIS_SCHEMA_STAGE_FAILED', evidence_validation: 'ANALYSIS_EVIDENCE_STAGE_FAILED', scoring: 'ANALYSIS_SCORING_STAGE_FAILED', database_completion: 'ANALYSIS_DATABASE_COMPLETION_FAILED', failure_persistence: 'ANALYSIS_FAILURE_PERSISTENCE_FAILED', worker_loop: 'ANALYSIS_WORKER_LOOP_FAILED' };
+function safeErrorCode(error: unknown, stage: FailureStage): string { if (error instanceof GeminiProviderError) return `GEMINI_${error.kind.toUpperCase()}`; if (error instanceof AnalysisProcessingError) return error.code; return unexpectedStageCodes[stage]; }
 function safeExceptionName(error: unknown): string { const name = error instanceof Error ? error.name : 'UnknownError'; return /^[A-Za-z][A-Za-z0-9_]*$/.test(name) ? name : 'Error'; }
+function safeExceptionMessage(error: unknown): string | undefined {
+  if (!(error instanceof Error) || !error.message) return undefined;
+  return error.message.replace(/https?:\/\/\S+/gi, '[url redacted]').replace(/(api[_ -]?key|token|password|cookie|authorization)\s*[:=]\s*\S+/gi, '$1=[redacted]').replace(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g, '[email redacted]').replace(/(['"])(?:(?!\1).){20,}\1/g, '$1[content redacted]$1').replace(/\s+/g, ' ').slice(0, 300);
+}
 function databaseDetails(error: unknown): { postgresCode?: string; postgresConstraint?: string } { const value = error as { code?: unknown; constraint?: unknown }; const code = typeof value?.code === 'string' && /^[0-9A-Z]{5}$/.test(value.code) ? value.code : undefined; const constraint = code && typeof value?.constraint === 'string' && /^[A-Za-z0-9_]+$/.test(value.constraint) ? value.constraint : undefined; return { ...(code ? { postgresCode: code } : {}), ...(constraint ? { postgresConstraint: constraint } : {}) }; }
 function failureDiagnostics(error: unknown, stage: FailureStage): Record<string, unknown> {
   const processing = error instanceof AnalysisProcessingError ? { validationFieldPaths: error.fieldPaths, validationIssues: error.validationIssues, evidenceIssues: error.evidenceIssues } : {};
   const provider = error instanceof GeminiProviderError ? { providerHttpStatus: error.details.httpStatus, providerStatus: error.details.providerStatus, providerMessage: error.details.providerMessage, requestDurationMs: error.details.requestDurationMs, inputChars: error.details.inputChars } : {};
-  return { stage, exceptionName: safeExceptionName(error), safeErrorCode: safeErrorCode(error), ...processing, ...provider, ...databaseDetails(error) };
+  const exceptionMessage = safeExceptionMessage(error);
+  return { stage, exceptionName: safeExceptionName(error), ...(exceptionMessage ? { exceptionMessage } : {}), safeErrorCode: safeErrorCode(error, stage), ...processing, ...provider, ...databaseDetails(error) };
 }
+export function classifyWorkerFailure(error: unknown, stage: FailureStage): Record<string, unknown> { return failureDiagnostics(error, stage); }
 
 export async function processOne(pool: Pool, provider: GeminiProvider): Promise<boolean> {
   const repo = createAnalysisRepository(pool); const row = await repo.claimNext(env.ANALYSIS_WORKER_LEASE_MS); if (!row) return false;
@@ -40,8 +47,8 @@ export async function processOne(pool: Pool, provider: GeminiProvider): Promise<
     if (!completed) throw new AnalysisProcessingError('database_completion', 'ANALYSIS_COMPLETION_LOST');
     logger.info('analysis completed', { analysisId: row.id, attempt: row.attempt_count, model: response.modelName ?? env.GEMINI_MODEL, ...response.diagnostics, ...normalizationDiagnostics });
   } catch (error) {
-    const code = safeErrorCode(error); const kind = error instanceof GeminiProviderError ? error.kind : 'invalid_output';
     const failureStage = error instanceof AnalysisProcessingError ? error.stage : stage;
+    const code = safeErrorCode(error, failureStage); const kind = error instanceof GeminiProviderError ? error.kind : 'invalid_output';
     try {
       if (transientKinds.has(kind) && row.attempt_count < env.ANALYSIS_MAX_ATTEMPTS) await repo.retry(row.id, claimToken, code, retryDelay(row.attempt_count), env.ANALYSIS_MAX_ATTEMPTS);
       else await repo.fail(row.id, claimToken, code);
